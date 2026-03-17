@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Movie Orbit</title>
+    <title>Movie Orbit | Auth</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -21,15 +21,15 @@
         <p class="eyebrow">Movie Watchlist Studio</p>
         <h1>Movie Orbit</h1>
         <p class="hero-copy">
-          Curate what you plan to watch, track what you are watching, and mark
-          what you have watched in one clean flow.
+          Sign in or create an account to access your dashboard and manage your
+          watchlist.
         </p>
       </section>
 
       <section class="auth card" data-reveal>
         <div class="auth-header">
-          <h2>Account</h2>
-          <p id="authStateText">Sign in to manage your watchlist.</p>
+          <h2>Authentication</h2>
+          <p>Use either option below to continue.</p>
         </div>
 
         <div class="auth-grid">
@@ -64,30 +64,10 @@
           </form>
         </div>
 
-        <div id="sessionPanel" class="session-panel hidden">
-          <p id="sessionText"></p>
-          <button id="logoutButton" type="button" class="ghost">Logout</button>
-        </div>
-      </section>
-
-      <section class="movies card" data-reveal>
-        <div class="section-title">
-          <h2>Movies</h2>
-          <p>Add a movie to your watchlist from here.</p>
-        </div>
-        <div id="moviesGrid" class="movies-grid"></div>
-      </section>
-
-      <section class="watchlist card" data-reveal>
-        <div class="section-title">
-          <h2>Your Watchlist</h2>
-          <p>Update progress or remove items anytime.</p>
-        </div>
-        <div id="watchlistGrid" class="watchlist-grid"></div>
       </section>
     </main>
 
     <div id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="/app.js"></script>
+    <script type="module" src="/auth.js"></script>
   </body>
 </html>

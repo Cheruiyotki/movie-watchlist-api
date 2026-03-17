@@ -10,13 +10,13 @@ const state = {
   watchlistItems: [],
 };
 
+if (!state.token || !state.user) {
+  window.location.replace("/auth");
+}
+
 const elements = {
-  registerForm: document.getElementById("registerForm"),
-  loginForm: document.getElementById("loginForm"),
-  logoutButton: document.getElementById("logoutButton"),
-  authStateText: document.getElementById("authStateText"),
-  sessionPanel: document.getElementById("sessionPanel"),
   sessionText: document.getElementById("sessionText"),
+  logoutButton: document.getElementById("logoutButton"),
   moviesGrid: document.getElementById("moviesGrid"),
   watchlistGrid: document.getElementById("watchlistGrid"),
   toast: document.getElementById("toast"),
@@ -43,15 +43,18 @@ const showToast = (message, isError = false) => {
   }, 3000);
 };
 
+const clearSessionAndRedirect = async () => {
+  localStorage.removeItem(STORAGE_KEYS.token);
+  localStorage.removeItem(STORAGE_KEYS.user);
+  window.location.replace("/auth");
+};
+
 const apiRequest = async (path, options = {}) => {
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),
+    Authorization: `Bearer ${state.token}`,
   };
-
-  if (state.token) {
-    headers.Authorization = `Bearer ${state.token}`;
-  }
 
   const response = await fetch(path, {
     ...options,
@@ -63,6 +66,11 @@ const apiRequest = async (path, options = {}) => {
     payload = await response.json();
   } catch {
     payload = null;
+  }
+
+  if (response.status === 401) {
+    await clearSessionAndRedirect();
+    throw new Error("Session expired. Please log in again.");
   }
 
   if (!response.ok) {
@@ -77,52 +85,16 @@ const apiRequest = async (path, options = {}) => {
   return payload;
 };
 
-const storeSession = () => {
-  if (state.token && state.user) {
-    localStorage.setItem(STORAGE_KEYS.token, state.token);
-    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(state.user));
-    return;
-  }
-
-  localStorage.removeItem(STORAGE_KEYS.token);
-  localStorage.removeItem(STORAGE_KEYS.user);
-};
-
-const setSessionFromAuthPayload = (payload) => {
-  state.token = payload?.data?.token || "";
-  state.user = payload?.data?.user || null;
-  storeSession();
-  renderAuthState();
-};
-
-const clearSession = () => {
-  state.token = "";
-  state.user = null;
-  state.watchlistItems = [];
-  storeSession();
-  renderAuthState();
-  renderWatchlist();
-  renderMovies();
-};
-
-const renderAuthState = () => {
-  if (!state.user || !state.token) {
-    elements.authStateText.textContent = "Sign in to manage your watchlist.";
-    elements.sessionPanel.classList.add("hidden");
-    return;
-  }
-
-  const name = state.user.name || state.user.email || "User";
-  elements.authStateText.textContent = "You are signed in.";
-  elements.sessionText.textContent = `Signed in as ${name}`;
-  elements.sessionPanel.classList.remove("hidden");
-};
-
 const formatYear = (value) => {
   if (!value) return "Unknown year";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Unknown year";
   return String(date.getFullYear());
+};
+
+const renderSession = () => {
+  const name = state.user?.name || state.user?.email || "User";
+  elements.sessionText.textContent = `Signed in as ${name}`;
 };
 
 const renderMovies = () => {
@@ -131,9 +103,6 @@ const renderMovies = () => {
       '<p class="muted">No movies found. Seed the database and refresh.</p>';
     return;
   }
-
-  const disabled = !state.token ? "disabled" : "";
-  const disabledText = !state.token ? "Login required to add movies." : "";
 
   elements.moviesGrid.innerHTML = state.movies
     .map((movie) => {
@@ -156,21 +125,20 @@ const renderMovies = () => {
             <div class="inline-grid">
               <label>
                 Status
-                <select name="status" ${disabled}>
+                <select name="status">
                   ${STATUS_OPTIONS.map((status) => `<option value="${status}">${status}</option>`).join("")}
                 </select>
               </label>
               <label>
                 Rating (1-10)
-                <input name="rating" type="number" min="1" max="10" ${disabled} />
+                <input name="rating" type="number" min="1" max="10" />
               </label>
               <label>
                 Notes
-                <input name="notes" type="text" maxlength="500" ${disabled} />
+                <input name="notes" type="text" maxlength="500" />
               </label>
             </div>
-            <button type="submit" ${disabled}>Add To Watchlist</button>
-            <p class="muted">${disabledText}</p>
+            <button type="submit">Add To Watchlist</button>
           </form>
         </article>
       `;
@@ -179,12 +147,6 @@ const renderMovies = () => {
 };
 
 const renderWatchlist = () => {
-  if (!state.token) {
-    elements.watchlistGrid.innerHTML =
-      '<p class="muted">Log in to view and manage your watchlist.</p>';
-    return;
-  }
-
   if (!state.watchlistItems.length) {
     elements.watchlistGrid.innerHTML =
       '<p class="muted">Your watchlist is empty. Add a movie from the section above.</p>';
@@ -242,11 +204,6 @@ const loadMovies = async () => {
 };
 
 const loadWatchlist = async () => {
-  if (!state.token) {
-    renderWatchlist();
-    return;
-  }
-
   elements.watchlistGrid.innerHTML = '<p class="muted">Loading watchlist...</p>';
   try {
     const response = await apiRequest("/watchlist");
@@ -268,62 +225,14 @@ const toOptionalNumber = (value) => {
   return number;
 };
 
-elements.registerForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const formData = new FormData(event.currentTarget);
-  const payload = {
-    name: String(formData.get("name") || "").trim(),
-    email: String(formData.get("email") || "").trim(),
-    password: String(formData.get("password") || ""),
-  };
-
-  try {
-    const response = await apiRequest("/auth/register", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-    setSessionFromAuthPayload(response);
-    showToast("Registration successful.");
-    event.currentTarget.reset();
-    await loadWatchlist();
-    renderMovies();
-  } catch (error) {
-    showToast(error.message, true);
-  }
-});
-
-elements.loginForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const formData = new FormData(event.currentTarget);
-  const payload = {
-    email: String(formData.get("email") || "").trim(),
-    password: String(formData.get("password") || ""),
-  };
-
-  try {
-    const response = await apiRequest("/auth/login", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-    setSessionFromAuthPayload(response);
-    showToast("Welcome back.");
-    event.currentTarget.reset();
-    await loadWatchlist();
-    renderMovies();
-  } catch (error) {
-    showToast(error.message, true);
-  }
-});
-
-elements.logoutButton.addEventListener("click", async () => {
+elements.logoutButton?.addEventListener("click", async () => {
   try {
     await apiRequest("/auth/logout", { method: "POST" });
   } catch {
-    // We still clear local session if API logout fails.
+    // If logout API fails, we still clear local state and redirect.
   }
 
-  clearSession();
-  showToast("Logged out.");
+  await clearSessionAndRedirect();
 });
 
 document.addEventListener("submit", async (event) => {
@@ -398,7 +307,7 @@ document.addEventListener("click", async (event) => {
 });
 
 const init = async () => {
-  renderAuthState();
+  renderSession();
   renderMovies();
   renderWatchlist();
   await loadMovies();
