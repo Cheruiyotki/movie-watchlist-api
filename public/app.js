@@ -59,6 +59,7 @@ const apiRequest = async (path, options = {}) => {
   const response = await fetch(path, {
     ...options,
     headers,
+    credentials: "same-origin",
   });
 
   let payload = null;
@@ -207,11 +208,15 @@ const loadWatchlist = async () => {
   elements.watchlistGrid.innerHTML = '<p class="muted">Loading watchlist...</p>';
   try {
     const response = await apiRequest("/watchlist");
-    state.watchlistItems = response?.data?.watchlistItems || [];
+    const items =
+      response?.data?.watchlistItems ??
+      response?.data?.watchlist ??
+      response?.watchlistItems ??
+      [];
+    state.watchlistItems = Array.isArray(items) ? items : [];
     renderWatchlist();
   } catch (error) {
-    state.watchlistItems = [];
-    renderWatchlist();
+    elements.watchlistGrid.innerHTML = `<p class="muted">Could not load watchlist: ${escapeHtml(error.message)}</p>`;
     showToast(error.message, true);
   }
 };

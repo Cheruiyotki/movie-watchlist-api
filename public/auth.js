@@ -38,6 +38,7 @@ const apiRequest = async (path, options = {}) => {
   const response = await fetch(path, {
     ...options,
     headers,
+    credentials: "same-origin",
   });
 
   let payload = null;
