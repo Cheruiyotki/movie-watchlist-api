@@ -1,11 +1,12 @@
-# Movie Watchlist API
+# Movie Orbit (Backend + Frontend)
 
-Backend API for a movie watchlist app built with Express, Prisma, and PostgreSQL (Neon adapter).
+Movie watchlist app with an Express + Prisma backend and a responsive frontend served from the same server.
 
 ## Features
 
 - User authentication with JWT (`register`, `login`, `logout`)
 - Protected watchlist management
+- Responsive frontend for auth, movies, and watchlist actions
 - Prisma schema + migrations
 - Seed script for adding sample movies
 
@@ -26,6 +27,10 @@ src/
   middleware/     # Auth + validation middleware
   routes/         # Express routes
   utils/          # Token helper
+public/
+  index.html      # Frontend markup
+  styles.css      # Frontend styles
+  app.js          # Frontend logic (API integration)
 prisma/
   migrations/     # Prisma migrations
   schema.prisma   # Data model
@@ -75,7 +80,7 @@ Generate Prisma client (usually done automatically, but safe to run):
 npx prisma generate
 ```
 
-## Run the API
+## Run The App
 
 ```bash
 pnpm dev
@@ -84,6 +89,10 @@ pnpm dev
 The server starts on:
 
 `http://localhost:5001`
+
+Open the frontend in your browser:
+
+`http://localhost:5001/`
 
 ## Seed Sample Movies
 
@@ -117,15 +126,10 @@ Example register body:
 
 ### Movies
 
+- `GET /movies`
 - `GET /movies/movies`
 
-Current response is a placeholder:
-
-```json
-{
-  "message": "List of movies"
-}
-```
+Both return a list of movies from the database.
 
 ### Watchlist (Protected)
 
@@ -136,6 +140,7 @@ Requires auth token in header:
 Endpoints:
 
 - `POST /watchlist` (add)
+- `GET /watchlist` (list current user's items)
 - `PUT /watchlist/:id` (update)
 - `DELETE /watchlist/:id` (remove)
 
@@ -159,5 +164,4 @@ Example add body:
 ## Current Limitations
 
 - No global error-handling middleware yet.
-- `/movies/movies` is currently a stub route.
 - No automated tests are implemented yet.
