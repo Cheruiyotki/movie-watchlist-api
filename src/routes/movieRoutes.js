@@ -1,10 +1,9 @@
- import express from 'express';
+import express from "express";
+import { listMovies } from "../controllers/movieController.js";
 
+const router = express.Router();
 
- const router = express.Router();
+router.get("/", listMovies);
+router.get("/movies", listMovies);
 
- router.get("/movies", (req, res) => {
-     res.json({message: "List of movies"});
- });
-
-    export default router;
+export default router;

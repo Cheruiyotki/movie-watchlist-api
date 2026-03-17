@@ -1,7 +1,43 @@
 import { prisma } from "../config/db.js";
 
+const ALLOWED_STATUSES = ["PLANNED", "WATCHING", "WATCHED"];
+
+const getWatchlist = async (req, res) => {
+  const watchlistItems = await prisma.watchlistItem.findMany({
+    where: { userId: req.user.id },
+    include: {
+      movie: {
+        select: {
+          id: true,
+          title: true,
+          overview: true,
+          runtime: true,
+          genres: true,
+          releaseYear: true,
+          posterUrl: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      watchlistItems,
+    },
+  });
+};
+
 const addToWatchlist = async (req, res) => {
   const { movieId,  status, rating, notes } = req.body;
+  const normalizedStatus = status ? String(status).toUpperCase() : "PLANNED";
+
+  if (!ALLOWED_STATUSES.includes(normalizedStatus)) {
+    return res.status(400).json({
+      error: "Status must be one of PLANNED, WATCHING, WATCHED",
+    });
+  }
 
   // Verify movie exists
   const movie = await prisma.movie.findUnique({
@@ -30,7 +66,7 @@ const existingInWatchlist = await prisma.watchlistItem.findUnique({
     data: {
       userId: req.user.id,
       movieId,
-      status: status || "PLANNED",
+      status: normalizedStatus,
       rating,
       notes,
     },
@@ -66,9 +102,18 @@ const updateWatchlistItem = async (req, res) => {
 
   // Build update data
   const updateData = {};
-  if (status !== undefined) updateData.status = status.toUpperCase();
+  if (status !== undefined) {
+    const normalizedStatus = String(status).toUpperCase();
+    if (!ALLOWED_STATUSES.includes(normalizedStatus)) {
+      return res.status(400).json({
+        error: "Status must be one of PLANNED, WATCHING, WATCHED",
+      });
+    }
+    updateData.status = normalizedStatus;
+  }
   if (rating !== undefined) updateData.rating = rating;
   if (notes !== undefined) updateData.notes = notes;
+  updateData.updatedAt = new Date();
 
   // Update watchlist item
   const updatedItem = await prisma.watchlistItem.update({
@@ -114,4 +159,4 @@ const removeFromWatchlist = async (req, res) => {
   });
 };
 
-export { addToWatchlist, removeFromWatchlist , updateWatchlistItem};
+export { getWatchlist, addToWatchlist, removeFromWatchlist, updateWatchlistItem };
