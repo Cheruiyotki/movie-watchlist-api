@@ -1,0 +1,123 @@
+ import {prisma } from '../src/config/db.js';
+import 'dotenv/config';
+
+ 
+
+const userId = process.env.CREATOR_ID;
+
+const movies =[
+    {
+    title: "The Matrix",
+    overview: "A computer hacker learns about the true nature of reality.",
+    releaseYear: new Date("1999-01-01"),
+    genres: ["Action", "Sci-Fi"],
+    runtime: 136,
+    posterUrl: "https://example.com/matrix.jpg",
+    createdBy: userId,
+  },
+  {
+    title: "Inception",
+    overview:
+      "A thief who steals corporate secrets through dream-sharing technology.",
+    releaseYear: new Date("2010-01-01"),
+    genres: ["Action", "Sci-Fi", "Thriller"],
+    runtime: 148,
+    posterUrl: "https://example.com/inception.jpg",
+    createdBy: userId,
+  },
+  {
+    title: "The Dark Knight",
+    overview: "Batman faces the Joker in a battle for Gotham's soul.",
+    releaseYear: new Date("2008-01-01"),
+    genres: ["Action", "Crime", "Drama"],
+    runtime: 152,
+    posterUrl: "https://example.com/darkknight.jpg",
+    createdBy: userId,
+  },
+  {
+    title: "Pulp Fiction",
+    overview: "The lives of two mob hitmen, a boxer, and others intertwine.",
+    releaseYear: new Date("1994-01-01"),
+    genres: ["Crime", "Drama"],
+    runtime: 154,
+    posterUrl: "https://example.com/pulpfiction.jpg",
+    createdBy: userId,
+  },
+  {
+    title: "Interstellar",
+    overview: "A team of explorers travel through a wormhole in space.",
+    releaseYear: new Date("2014-01-01"),
+    genres: ["Adventure", "Drama", "Sci-Fi"],
+    runtime: 169,
+    posterUrl: "https://example.com/interstellar.jpg",
+    createdBy: userId,
+  },
+  {
+    title: "The Shawshank Redemption",
+    overview: "Two imprisoned men bond over a number of years.",
+    releaseYear: new Date("1994-01-01"),
+    genres: ["Drama"],
+    runtime: 142,
+    posterUrl: "https://example.com/shawshank.jpg",
+    createdBy: userId,
+  },
+  {
+    title: "Fight Club",
+    overview:
+      "An insomniac office worker and a devil-may-care soapmaker form an underground fight club.",
+    releaseYear: new Date("1999-01-01"),
+    genres: ["Drama"],
+    runtime: 139,
+    posterUrl: "https://example.com/fightclub.jpg",
+    createdBy: userId,
+  },
+  {
+    title: "Forrest Gump",
+    overview:
+      "The presidencies of Kennedy and Johnson unfold through the perspective of an Alabama man.",
+    releaseYear: new Date("1994-01-01"),
+    genres: ["Drama", "Romance"],
+    runtime: 142,
+    posterUrl: "https://example.com/forrestgump.jpg",
+    createdBy: userId,
+  },
+  {
+    title: "The Godfather",
+    overview:
+      "The aging patriarch of an organized crime dynasty transfers control to his son.",
+    releaseYear: new Date("1972-01-01"),
+    genres: ["Crime", "Drama"],
+    runtime: 175,
+    posterUrl: "https://example.com/godfather.jpg",
+    createdBy: userId,
+  },
+  {
+    title: "Goodfellas",
+    overview: "The story of Henry Hill and his life in the mob.",
+    releaseYear: new Date("1990-01-01"),
+    genres: ["Biography", "Crime", "Drama"],
+    runtime: 146,
+    posterUrl: "https://example.com/goodfellas.jpg",
+    createdBy: userId,
+  },
+];
+
+const main = async () => {
+    console.log("Seeding database with movies...");
+    for (const movie of movies) {
+        await prisma.movie.create({
+            data: movie,
+        });
+        console.log(`Created movie: ${movie.title}`);
+    }
+    console.log("Finished seeding database.");
+}
+
+main()
+    .catch((e) => {
+        console.error(e);
+        process.exit(1);
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });
