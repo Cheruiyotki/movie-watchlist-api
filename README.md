@@ -9,6 +9,7 @@ Movie watchlist app with an Express + Prisma backend and a responsive frontend s
 - Responsive frontend for auth, movies, and watchlist actions
 - Prisma schema + migrations
 - Seed script for adding sample movies
+- Unit tests for authentication controller + middleware
 
 ## Tech Stack
 
@@ -17,6 +18,7 @@ Movie watchlist app with an Express + Prisma backend and a responsive frontend s
 - PostgreSQL (Neon adapter)
 - Zod validation
 - JWT + bcrypt
+- Node test runner (`node:test`)
 
 ## Project Structure
 
@@ -35,6 +37,10 @@ prisma/
   migrations/     # Prisma migrations
   schema.prisma   # Data model
   seed.js         # Seed movies
+tests/
+  authController.test.js   # Unit tests for register/login/logout
+  authMiddleware.test.js   # Unit tests for auth middleware
+  runTests.js              # Test entry point
 ```
 
 ## Prerequisites
@@ -159,9 +165,9 @@ Example add body:
 
 - `pnpm dev` - Run server with nodemon
 - `pnpm seed:movies` - Seed sample movie data
-- `pnpm test` - Placeholder test script
+- `pnpm test` - Run unit tests
 
 ## Current Limitations
 
 - No global error-handling middleware yet.
-- No automated tests are implemented yet.
+- Test coverage is currently focused on authentication paths.
